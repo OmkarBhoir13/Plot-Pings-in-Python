@@ -4,8 +4,59 @@ import re
 import sys
 import time
 from optparse import OptionParser
-
 import numpy as np
+import glob
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+# Define the directory where log files are stored
+import os
+import re
+import matplotlib
+matplotlib.use('Qt5Agg')  # Use the Qt5Agg backend
+import matplotlib.pyplot as plt
+
+def extract_ping_times(log_file):
+    ping_times = []
+    # Regex pattern to extract ping times from log
+    ping_pattern = r'bytes=\d+ time=(\d+)ms'
+
+    try:
+        with open(log_file, 'r') as file:
+            for line in file:
+                match = re.search(ping_pattern, line)
+                if match:
+                    ping_time = int(match.group(1))  # Convert to int
+                    ping_times.append(ping_time)
+    except FileNotFoundError:
+        print(f"Log file {log_file} not found.")
+    
+    return ping_times
+
+# Specify the path to your log file
+log_file_path = './example/example_logfile_windows.log'  # Update this path
+
+# Extract ping times from the log file
+ping_times = extract_ping_times(log_file_path)
+
+# Check if ping_times list is not empty
+if not ping_times:
+    print("No ping times extracted. Please check the log file.")
+else:
+    print(f"Extracted Ping Times: {ping_times}")  # Debug: print the extracted times
+
+    # Create a bar graph
+    plt.figure(figsize=(10, 6))
+    plt.xlabel('Ping Attempt Number')
+    plt.ylabel('Ping Time (ms)')
+    plt.title('Ping Times from Log Files')
+    num_attempt=min(50,len(ping_times))
+    plt.xticks(range(num_attempt), [f"{i+1}  " for i in range(num_attempt)], rotation=45)
+    plt.bar(range(num_attempt), ping_times[:num_attempt], color='blue')
+    plt.tight_layout()  # Adjust layout to make room for x labels
+    plt.show()
+
+# plt.savefig('ping_times_graph.png')
 
 # software version
 __version__ = "1.1.0"
@@ -192,7 +243,6 @@ def main(argv=None):
             print("Error: cannot generate plot; no data collected. Please check your connection.")
             return 2
         plt = plot_gen(ping, now, nans, opts.host, opts.plot, opts.size)
-
         # save if applicable
         if opts.fsave:
             print(f"Saved plot {plot_name}")
